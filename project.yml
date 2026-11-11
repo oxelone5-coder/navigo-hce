@@ -14,8 +14,6 @@ targets:
       path: NavigoHCE/Info.plist
     entitlements:
       path: NavigoHCE/NavigoHCE.entitlements
-    scheme:
-      testTargets: [NavigoCoreTests]
   NavigoDump:
     type: application
     platform: iOS
