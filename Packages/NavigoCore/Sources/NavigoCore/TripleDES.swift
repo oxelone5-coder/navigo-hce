@@ -220,8 +220,8 @@ public final class PureSwiftTripleDES: CalypsoCrypto {
         var left = Array(permuted[0..<32])
         var right = Array(permuted[32..<64])
 
-        let rounds = encrypt ? 0..<16 : (0..<16).reversed()
-        for round in rounds {
+        let roundIndices = encrypt ? Array(0..<16) : Array((0..<16).reversed())
+        for round in roundIndices {
             let f = desF(right: right, subkey: subkeys[round])
             var newRight: [UInt8] = []
             for i in 0..<32 { newRight.append(left[i] ^ f[i]) }
