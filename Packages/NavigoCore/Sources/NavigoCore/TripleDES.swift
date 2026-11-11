@@ -211,7 +211,7 @@ public final class PureSwiftTripleDES: CalypsoCrypto {
     }
 
     /// Chiffre/déchiffre un bloc de 64 bits avec DES.
-    private static func desBlock(block: [UInt8], subkeys: [[UInt8]], encrypt: Bool) -> [UInt8] {
+    private static func desBlock(block: [UInt8], subkeys: [[UInt8]], encrypt: Bool) -> Data {
         var bits = bitArray(from: Data(block), count: 64)
 
         var permuted: [UInt8] = []
@@ -230,9 +230,9 @@ public final class PureSwiftTripleDES: CalypsoCrypto {
         }
 
         var preFp = right + left
-        var result: [UInt8] = []
-        for i in 0..<64 { result.append(preFp[Int(fp[i]) - 1]) }
-        return result
+        var resultBits: [UInt8] = []
+        for i in 0..<64 { resultBits.append(preFp[Int(fp[i]) - 1]) }
+        return Data(data(fromBits: resultBits))
     }
 
     /// Convertit des données en tableau de bits (MSB first), tronqué ou complété à `count`.
@@ -272,10 +272,10 @@ public final class PureSwiftTripleDES: CalypsoCrypto {
         let sk3 = PureSwiftTripleDES.generateSubkeys(key: k3)
 
         let e1 = PureSwiftTripleDES.desBlock(block: [UInt8](block), subkeys: sk1, encrypt: true)
-        let d2 = PureSwiftTripleDES.desBlock(block: e1, subkeys: sk2, encrypt: false)
-        let e3 = PureSwiftTripleDES.desBlock(block: d2, subkeys: sk3, encrypt: true)
+        let d2 = PureSwiftTripleDES.desBlock(block: [UInt8](e1), subkeys: sk2, encrypt: false)
+        let e3 = PureSwiftTripleDES.desBlock(block: [UInt8](d2), subkeys: sk3, encrypt: true)
 
-        return Data(e3)
+        return e3
     }
 
     public func tripleDesEcbDecrypt(key: Data, block: Data) -> Data {
@@ -288,10 +288,10 @@ public final class PureSwiftTripleDES: CalypsoCrypto {
 
         // TDEA decrypt : D_K3(E_K2(D_K1(ct)))
         let d3 = PureSwiftTripleDES.desBlock(block: [UInt8](block), subkeys: sk3, encrypt: false)
-        let e2 = PureSwiftTripleDES.desBlock(block: d3, subkeys: sk2, encrypt: true)
-        let d1 = PureSwiftTripleDES.desBlock(block: e2, subkeys: sk1, encrypt: false)
+        let e2 = PureSwiftTripleDES.desBlock(block: [UInt8](d3), subkeys: sk2, encrypt: true)
+        let d1 = PureSwiftTripleDES.desBlock(block: [UInt8](e2), subkeys: sk1, encrypt: false)
 
-        return Data(d1)
+        return d1
     }
 
     public func tripleDesCbcMac(key: Data, data: Data) -> Data {
@@ -313,13 +313,13 @@ public final class PureSwiftTripleDES: CalypsoCrypto {
             var xored: [UInt8] = []
             for j in 0..<8 { xored.append(block[j] ^ iv[j]) }
             let encrypted = PureSwiftTripleDES.desBlock(block: xored, subkeys: sk1, encrypt: true)
-            iv = encrypted
-            mac = encrypted
+            iv = [UInt8](encrypted)
+            mac = [UInt8](encrypted)
         }
 
         let decrypted = PureSwiftTripleDES.desBlock(block: mac, subkeys: sk2, encrypt: false)
-        let final = PureSwiftTripleDES.desBlock(block: decrypted, subkeys: sk1, encrypt: true)
+        let final = PureSwiftTripleDES.desBlock(block: [UInt8](decrypted), subkeys: sk1, encrypt: true)
 
-        return Data(final)
+        return final
     }
 }
