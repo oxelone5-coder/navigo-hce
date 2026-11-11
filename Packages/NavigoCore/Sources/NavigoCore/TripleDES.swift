@@ -232,7 +232,7 @@ public final class PureSwiftTripleDES: CalypsoCrypto {
         var preFp = right + left
         var resultBits: [UInt8] = []
         for i in 0..<64 { resultBits.append(preFp[Int(fp[i]) - 1]) }
-        return Data(data(fromBits: resultBits))
+        return Data(PureSwiftTripleDES.data(fromBits: resultBits))
     }
 
     /// Convertit des données en tableau de bits (MSB first), tronqué ou complété à `count`.
