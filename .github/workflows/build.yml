@@ -1,0 +1,45 @@
+name: build-ipa
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Tests NavigoCore
+        run: swift test --package-path Packages/NavigoCore
+
+  build:
+    needs: test
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: brew install xcodegen
+      - run: xcodegen generate
+      - name: Lister les schémas
+        run: |
+          PROJ=$(ls -d *.xcodeproj | head -1)
+          xcodebuild -list -project "$PROJ"
+      - name: Build non signé
+        run: |
+          PROJ=$(ls -d *.xcodeproj | head -1)
+          xcodebuild -quiet -project "$PROJ" -scheme NavigoHCE \
+            -configuration Release -sdk iphoneos \
+            -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY=""
+      - name: Embarquer les entitlements en signature ad-hoc
+        run: |
+          APP=build/Build/Products/Release-iphoneos/NavigoHCE.app
+          codesign --force --sign - --entitlements NavigoHCE/NavigoHCE.entitlements "$APP"
+          codesign -d --entitlements :- "$APP"
+      - name: Empaqueter l'IPA
+        run: |
+          mkdir -p out/Payload
+          cp -R build/Build/Products/Release-iphoneos/NavigoHCE.app out/Payload/
+          cd out && zip -qry NavigoHCE.ipa Payload
+      - uses: actions/upload-artifact@v4
+        with:
+          name: NavigoHCE-unsigned
+          path: out/NavigoHCE.ipa

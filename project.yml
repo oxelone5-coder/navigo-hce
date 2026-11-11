@@ -1,0 +1,27 @@
+name: Navigo
+options:
+  bundleIdPrefix: fr.tonnom
+  deploymentTarget: { iOS: "17.4" }
+packages:
+  NavigoCore: { path: Packages/NavigoCore }
+targets:
+  NavigoHCE:
+    type: application
+    platform: iOS
+    sources: [NavigoHCE]
+    dependencies: [{ package: NavigoCore }]
+    info:
+      path: NavigoHCE/Info.plist
+    entitlements:
+      path: NavigoHCE/NavigoHCE.entitlements
+    scheme:
+      testTargets: [NavigoCoreTests]
+  NavigoDump:
+    type: application
+    platform: iOS
+    sources: [NavigoDump]
+    dependencies: [{ package: NavigoCore }]
+    info:
+      path: NavigoDump/Info.plist
+    entitlements:
+      path: NavigoDump/NavigoDump.entitlements
