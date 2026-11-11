@@ -232,7 +232,7 @@ public final class PureSwiftTripleDES: CalypsoCrypto {
         var preFp = right + left
         var resultBits: [UInt8] = []
         for i in 0..<64 { resultBits.append(preFp[Int(fp[i]) - 1]) }
-        return Data(PureSwiftTripleDES.data(fromBits: resultBits))
+        return PureSwiftTripleDES.bitsToData(resultBits)
     }
 
     /// Convertit des données en tableau de bits (MSB first), tronqué ou complété à `count`.
@@ -246,6 +246,19 @@ public final class PureSwiftTripleDES: CalypsoCrypto {
         if bits.count > count { bits = Array(bits[0..<count]) }
         while bits.count < count { bits.append(0) }
         return bits
+    }
+
+    /// Convertit un tableau de bits en données (groupes de 8 bits).
+    private static func bitsToData(_ bits: [UInt8]) -> Data {
+        var result = Data()
+        for i in stride(from: 0, to: bits.count, by: 8) {
+            var byte: UInt8 = 0
+            for j in 0..<8 where i + j < bits.count {
+                byte = (byte << 1) | bits[i + j]
+            }
+            result.append(byte)
+        }
+        return result
     }
 
     // MARK: - Bourrage ISO 9797-1 méthode 2
